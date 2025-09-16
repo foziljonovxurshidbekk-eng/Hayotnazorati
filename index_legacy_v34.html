@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hayot Kundaligi — single file LEGACY v3.4</title>
+
+  <meta http-equiv="Cache-Control" content="no-store, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <style>
+  :root{
+    --blue:#1f3b64; --blue-deep:#0e2a47;
+    --green:#1f6441; --green-deep:#0f3d2e;
+    --red:#b3261e; --red-deep:#5a1b1b;
+    --bg:#0b1118; --card:#121823; --ink:#eaf2ff; --muted:#9fb1c6; --border:#1f2a3a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Inter,Roboto}
+  .container{max-width:1100px;margin:0 auto;padding:18px}
+  h1{margin:0 0 4px;font-size:28px}
+  .subtitle{color:var(--muted);margin:0 0 10px}
+  .status{font-size:12px;color:#cde1ff;background:#0f1522;border:1px solid var(--border);display:inline-block;padding:4px 8px;border-radius:8px}
+  .card{background:linear-gradient(180deg,#101622,#0f1520);border:1px solid var(--border);border-radius:16px;padding:16px;margin:16px 0;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:900px){.grid-2{grid-template-columns:1fr}}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .btn{border:1px solid var(--border);background:#0f1520;color:var(--ink);border-radius:12px;padding:10px 14px;cursor:pointer;transition:transform .1s ease}
+  .btn:hover{transform:translateY(-1px)}
+  .primary{background:linear-gradient(180deg,var(--blue),var(--blue-deep))}
+  .success{background:linear-gradient(180deg,var(--green),var(--green-deep))}
+  .ghost{background:#101722}
+  .select,.input{border:1px solid var(--border);background:#0f1520;color:var(--ink);border-radius:10px;padding:10px 12px;min-width:120px}
+  .input.wide{min-width:320px}
+  .inline{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .inline-details summary{cursor:pointer;margin-top:6px}
+  .mini{width:100%;border-collapse:collapse;font-size:14px}
+  .mini th,.mini td{border-bottom:1px solid #253149;padding:6px 8px}
+  .range-switch{display:flex;gap:6px}
+  .week-strip{display:flex;gap:6px}
+  .week-dot{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;border:1px solid var(--border);background:#0f1520;color:#9cb0c6}
+  .week-dot.done{background:#0f241b;border-color:#2a6646;color:#a8f0c9}
+  .progress-wrap{margin:12px 0}
+  .progress{height:24px;background:#0d131d;border:1px solid #223149;border-radius:10px;position:relative;overflow:hidden}
+  .progress span{position:absolute;inset:0;display:grid;place-items:center;color:#d5e6ff;font-weight:600}
+  .spark{background:#0e1420;border:1px solid #223149;border-radius:10px;width:100%;height:220px}
+  .spark.slim{height:200px}
+  .switch{position:relative;display:inline-block;width:48px;height:28px}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#28364c;transition:.2s;border-radius:28px;border:1px solid var(--border)}
+  .slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;top:2px;background:white;border-radius:50%;transition:.2s}
+  .switch input:checked + .slider{background:#1e4f38}
+  .switch input:checked + .slider:before{transform:translateX(20px)}
+  .muted{color:var(--muted);font-size:13px;margin:6px 0}
+  </style>
+
+  <script>
+  // Error catcher — statusga sababini yozib qo'yamiz
+  window.addEventListener('error', function(e){
+    var el = document.getElementById('status');
+    if (el) el.textContent = '❌ JS xato: ' + (e.message || 'no message');
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    var el = document.getElementById('status');
+    var msg = (e.reason && (e.reason.message || e.reason)) || 'promise xato';
+    if (el) el.textContent = '❌ JS promise xato: ' + msg;
+  });
+
+  // Old service workerlarni o'chirish
+  (function(){
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); });
+      if (window.caches) { caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); }); }
+    }
+    document.addEventListener('DOMContentLoaded', function(){
+      var el = document.getElementById('status'); if(el) el.textContent = '🔄 JS yuklandi (legacy v3.4)...';
+    });
+  })();
+  </script>
+</head>
+<body>
+  <header class="container">
+    <h1>Hayot Kundaligi</h1>
+    <p class="subtitle">Uyqu • Zal • Suv • Ovqat • Fokus</p>
+    <div id="status" class="status">⏳ HTML yuklandi</div>
+  </header>
+
+  <main class="container">
+    <!-- Sections identical to previous single-file (omitted for brevity in comment) -->
+    <section class="card">
+      <div class="card-head">
+        <h2>Uyqu</h2>
+        <div class="range-switch">
+          <button class="range-btn" data-range="week">Hafta</button>
+          <button class="range-btn" data-range="month">Oy</button>
+          <button class="range-btn" data-range="year">Yil</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="btn-row">
+            <button id="sleep-start-btn" class="btn primary">Uyquga yotdim</button>
+            <button id="sleep-end-btn" class="btn success">Uyg'ondim</button>
+          </div>
+          <details class="inline-details">
+            <summary>Qo'lda kiritish</summary>
+            <div class="inline">
+              <input type="datetime-local" id="sleep-start-manual">
+              <input type="datetime-local" id="sleep-end-manual">
+              <button id="sleep-save-manual" class="btn ghost">Saqlash</button>
+            </div>
+          </details>
+          <h3>Oxirgi yozuvlar</h3>
+          <table class="mini">
+            <thead><tr><th>Sana</th><th>Boshlanish</th><th>Tugash</th><th>Soat</th></tr></thead>
+            <tbody id="sleep-last-rows"></tbody>
+          </table>
+        </div>
+        <div><canvas id="sleepCanvas" class="spark"></canvas></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Zal (3×/hafta)</h2>
+        <div class="week-strip" id="week-strip"></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="btn-row">
+            <select id="workout-type" class="select">
+              <option value="gym">Gym</option>
+              <option value="cardio">Cardio</option>
+              <option value="home">Home</option>
+              <option value="sport">Sport</option>
+            </select>
+            <button id="workout-done-btn" class="btn primary">Bugun zalga bordim</button>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress" id="wo-progress"><span id="wo-progress-label">0/3</span></div>
+          </div>
+          <div class="cheat-wrap">
+            <label class="switch">
+              <input type="checkbox" id="cheat-toggle">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">Haftalik cheat day</span>
+          </div>
+        </div>
+        <div><canvas id="workoutCanvas" class="spark"></canvas></div>
+      </div>
+      <div class="grid-2">
+        <div><h3>Cheat day statistikasi (6 oy)</h3><canvas id="cheatCanvas" class="spark slim"></canvas></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Suv</h2>
+        <div class="range-switch">
+          <button class="water-range-btn" data-range="week">Hafta</button>
+          <button class="water-range-btn" data-range="month">Oy</button>
+          <button class="water-range-btn" data-range="year">Yil</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="btn-row">
+            <button class="btn primary" data-water="+0.25">+0.25L</button>
+            <button class="btn primary" data-water="+0.5">+0.5L</button>
+            <button class="btn primary" data-water="+1">+1L</button>
+            <button id="water-reset" class="btn ghost">Bugun 0</button>
+          </div>
+          <h3>Bugun: <span id="water-today">0</span> L</h3>
+        </div>
+        <div><canvas id="waterCanvas" class="spark"></canvas></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Ovqat</h2>
+        <div class="range-switch">
+          <button class="meal-range-btn" data-range="week">Hafta</button>
+          <button class="meal-range-btn" data-range="month">Oy</button>
+          <button class="meal-range-btn" data-range="year">Yil</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="inline">
+            <select id="meal-type" class="select">
+              <option value="nonushta">Nonushta</option>
+              <option value="tushlik">Tushlik</option>
+              <option value="kechki">Kechki</option>
+              <option value="snack">Snack</option>
+            </select>
+            <input id="meal-text" placeholder="Masalan: plov 650kcal yoki '2 somsa'" class="input">
+            <button id="meal-add-btn" class="btn primary">Qo'shish</button>
+          </div>
+          <h3>Bugungi ovqatlar</h3>
+          <table class="mini">
+            <thead><tr><th>Vaqt</th><th>Turi</th><th>Ta'rif</th><th>kcal</th></tr></thead>
+            <tbody id="meals-today-rows"></tbody>
+            <tfoot><tr><td colspan="3">Jami</td><td id="meals-today-total">0</td></tr></tfoot>
+          </table>
+        </div>
+        <div><canvas id="mealsCanvas" class="spark"></canvas></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Google Drive integratsiyasi</h2>
+      <p class="muted">URL saqlansa, har bir o‘zgarish avtomatik yuboriladi. Test uchun “Hozir yuborish”.</p>
+      <div class="inline">
+        <input id="gas-url" placeholder="https://script.google.com/macros/s/...../exec" class="input wide">
+        <button id="save-gas" class="btn primary">Saqlash</button>
+        <button id="send-now" class="btn ghost">Hozir yuborish</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container"><p>© 2025 Hayot Kundaligi — single file LEGACY v3.4</p></footer>
+
+  <script>
+  // ===== Storage & helpers =====
+  var KEY = "lifestats_v3";
+  var state;
+  try { state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify({
+    sleeps: [], workouts: [], cheatWeeks: [], meals: [], water: [], focus: [],
+    settings: { sleepPendingStart: null, gasUrl: null, focusTimerStart: null }
+  })); } catch(e){ state = {sleeps:[],workouts:[],cheatWeeks:[],meals:[],water:[],focus:[],settings:{sleepPendingStart:null,gasUrl:null,focusTimerStart:null}}; }
+  function save(){ localStorage.setItem(KEY, JSON.stringify(state)); maybeAutoSend(); }
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+  function minutesBetween(a,b){ return Math.max(0, Math.round((new Date(b)-new Date(a))/60000)); }
+  function fmtHM(d){ return d.toTimeString().slice(0,5); }
+  function clamp(n,min,max){ return Math.min(max, Math.max(min, n)); }
+  function getISOWeek(d){
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+    return {week: weekNo, year: d.getUTCFullYear()};
+  }
+  function getISOWeekKey(d){ var w=getISOWeek(new Date(d)); return w.year + "-W" + String(w.week).padStart(2,"0"); }
+
+  function setStatus(t){ var el=document.getElementById("status"); if(el) el.textContent=t; }
+
+  // Canvas helpers
+  function setupCanvas(id, baseH){
+    if(baseH===undefined) baseH=220;
+    var canvas=document.getElementById(id);
+    if(!canvas) return null;
+    function resize(){
+      var ratio=window.devicePixelRatio || 1;
+      var cssW=Math.max(280, Math.floor(canvas.getBoundingClientRect().width));
+      var cssH=baseH;
+      var w=Math.floor(cssW*ratio), h=Math.floor(cssH*ratio);
+      if(canvas.width!==w || canvas.height!==h){ canvas.width=w; canvas.height=h; }
+    }
+    resize();
+    return {canvas:canvas, resize:resize};
+  }
+  var canvases=[
+    setupCanvas("sleepCanvas",220),
+    setupCanvas("workoutCanvas",220),
+    setupCanvas("cheatCanvas",200),
+    setupCanvas("waterCanvas",220),
+    setupCanvas("mealsCanvas",220)
+  ].filter(function(x){return !!x;});
+  function resizeAll(){ canvases.forEach(function(c){ c.resize(); }); renderAllCharts(); }
+  window.addEventListener("resize", resizeAll);
+
+  function drawLineCanvas(canvas, values, opts){
+    if(!canvas) return;
+    opts = opts || {}; var min=opts.min||0; var max = (opts.max==null)?null:opts.max;
+    var color=opts.color||"#8bd1ff"; var fill=!!opts.fill;
+    var ctx=canvas.getContext("2d"); var w=canvas.width, h=canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle="#223149"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(32,h-24); ctx.lineTo(w-8,h-24); ctx.stroke();
+    if(!values || values.length===0){ ctx.fillStyle="#9fb1c6"; ctx.font="14px system-ui,-apple-system"; ctx.fillText("Hali ma'lumot yo'q",40,h/2); return; }
+    var allZero=values.every(function(v){return !v || Number(v)===0;});
+    if(max==null){ max = Math.max(min+1, Math.max.apply(null, values)); }
+    var padL=32,padR=8,padT=8,padB=24, innerW=w-padL-padR, innerH=h-padT-padB;
+    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin="round"; ctx.lineCap="round"; ctx.beginPath();
+    values.forEach(function(v,i){
+      var x=padL + (i/((values.length-1)||1))*innerW;
+      var norm=(v-min)/(max-min||1);
+      var y=padT + (1-norm)*innerH;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    if(allZero){ ctx.setLineDash([6,6]); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle="#9fb1c6"; ctx.font="13px system-ui,-apple-system"; ctx.fillText("Ma'lumot kiritilsa graf tiklanadi",40,h/2); }
+    else { ctx.stroke(); if(fill){ ctx.lineTo(padL+innerW,h-padB); ctx.lineTo(padL,h-padB); ctx.closePath(); ctx.globalAlpha=0.15; ctx.fillStyle=color; ctx.fill(); ctx.globalAlpha=1.0; } }
+  }
+
+  // Sleep
+  var sleepStartBtn=document.getElementById("sleep-start-btn");
+  var sleepEndBtn=document.getElementById("sleep-end-btn");
+  var sleepStartManual=document.getElementById("sleep-start-manual");
+  var sleepEndManual=document.getElementById("sleep-end-manual");
+  var sleepSaveManual=document.getElementById("sleep-save-manual");
+  var sleepRows=document.getElementById("sleep-last-rows");
+  var sleepRange="week";
+
+  if(sleepStartBtn) sleepStartBtn.addEventListener("click", function(){
+    if(state.settings.sleepPendingStart){ alert("Avvalgi uyqu ochiq. 'Uyg'ondim' ni bosing."); return; }
+    state.settings.sleepPendingStart = new Date().toISOString();
+    save(); renderSleepRows();
+  });
+  if(sleepEndBtn) sleepEndBtn.addEventListener("click", function(){
+    if(!state.settings.sleepPendingStart){ alert("Boshlanish belgilanmagan."); return; }
+    var startISO=state.settings.sleepPendingStart, endISO=new Date().toISOString();
+    state.sleeps.push({startISO:startISO,endISO:endISO,minutes: minutesBetween(startISO,endISO)});
+    state.settings.sleepPendingStart=null;
+    save(); renderSleepRows(); updateSleepChart();
+  });
+  if(sleepSaveManual) sleepSaveManual.addEventListener("click", function(){
+    if(!sleepStartManual.value || !sleepEndManual.value) return alert("Start/End kiriting");
+    var startISO = new Date(sleepStartManual.value).toISOString();
+    var endISO = new Date(sleepEndManual.value).toISOString();
+    state.sleeps.push({startISO:startISO,endISO:endISO,minutes: minutesBetween(startISO,endISO)});
+    state.settings.sleepPendingStart=null; sleepStartManual.value=""; sleepEndManual.value="";
+    save(); renderSleepRows(); updateSleepChart();
+  });
+
+  function renderSleepRows(){
+    if(!sleepRows) return;
+    var last = state.sleeps.slice(-7).reverse();
+    sleepRows.innerHTML = last.map(function(s){
+      var d=new Date(s.endISO||s.startISO), a=new Date(s.startISO), b=new Date(s.endISO);
+      return '<tr><td>'+d.toISOString().slice(0,10)+'</td><td>'+a.toTimeString().slice(0,5)+'</td><td>'+b.toTimeString().slice(0,5)+'</td><td>'+((s.minutes/60).toFixed(2))+'</td></tr>';
+    }).join("");
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".range-btn"), function(b){ b.addEventListener("click", function(){ sleepRange=b.getAttribute("data-range"); updateSleepChart(); }); });
+  function aggregateSleep(range){
+    if(!range) range="week";
+    var now=new Date();
+    if(range==="week"||range==="month"){
+      var days=(range==="week"?7:30);
+      return Array.from({length:days}, function(_,i){
+        var d=new Date(now); d.setDate(now.getDate()-(days-1-i));
+        var ds=d.toISOString().slice(0,10);
+        var mins=state.sleeps.filter(function(s){ return new Date(s.endISO).toISOString().slice(0,10)===ds; })
+          .reduce(function(a,b){ return a+b.minutes; },0);
+        return +((mins/60).toFixed(2));
+      });
+    }
+    var arr=[];
+    for(var i=11;i>=0;i--){
+      var d2=new Date(); d2.setMonth(d2.getMonth()-i,1);
+      var y=d2.getFullYear(), m=d2.getMonth();
+      var start=new Date(y,m,1), end=new Date(y,m+1,1);
+      var inM=state.sleeps.filter(function(s){ var e=new Date(s.endISO); return e>=start&&e<end; });
+      var total=inM.reduce(function(a,b){return a+b.minutes;},0);
+      var days2=Math.round((end-start)/86400000);
+      arr.push(+((total/60)/(days2||1)).toFixed(2));
+    }
+    return arr;
+  }
+  function updateSleepChart(){
+    var canvas=document.getElementById("sleepCanvas");
+    var vals=aggregateSleep(sleepRange);
+    drawLineCanvas(canvas, vals, {min:0, max:10, color:"#6ea8fe", fill:true});
+  }
+
+  // Workout + cheat
+  var weekStrip=document.getElementById("week-strip");
+  var workoutType=document.getElementById("workout-type");
+  var workoutDoneBtn=document.getElementById("workout-done-btn");
+  var woProgress=document.getElementById("wo-progress");
+  var woProgressLabel=document.getElementById("wo-progress-label");
+  var cheatToggle=document.getElementById("cheat-toggle");
+
+  if(workoutDoneBtn) workoutDoneBtn.addEventListener("click", function(){
+    var date=todayStr();
+    if(state.workouts.some(function(w){return w.date===date;})) return alert("Bugun allaqachon yozilgan.");
+    state.workouts.push({date:date, type:workoutType.value, minutes:null});
+    save(); buildWeekStrip(); renderWorkoutProgress(); updateWorkoutChart();
+  });
+  function workoutsThisWeek(){
+    var key=getISOWeekKey(new Date());
+    return state.workouts.filter(function(w){ return getISOWeekKey(w.date)===key; });
+  }
+  function buildWeekStrip(){
+    if(!weekStrip) return;
+    weekStrip.innerHTML="";
+    var now=new Date(); var dayOfWeek=(now.getDay()+6)%7; var monday=new Date(now); monday.setDate(now.getDate()-dayOfWeek);
+    var names=['Du','Se','Ch','Pa','Ju','Sh','Ya'];
+    for(var i=0;i<7;i++){
+      var d=new Date(monday); d.setDate(monday.getDate()+i);
+      var ds=d.toISOString().slice(0,10);
+      var done=state.workouts.some(function(w){return w.date===ds;});
+      var el=document.createElement("div"); el.className="week-dot"+(done?" done":""); el.textContent=names[i]; el.title=ds;
+      weekStrip.appendChild(el);
+    }
+  }
+  function renderWorkoutProgress(){
+    if(!woProgress) return;
+    var count=Array.from(new Set(workoutsThisWeek().map(function(w){return w.date;}))).length;
+    var pct=clamp((count/3)*100,0,100);
+    if(woProgressLabel) woProgressLabel.textContent=count+"/3";
+    woProgress.style.background = "linear-gradient(90deg, var(--blue) 0%, var(--blue-deep) "+pct+"%, #0d131d "+pct+"%)";
+  }
+  if(cheatToggle) cheatToggle.addEventListener("change", function(){
+    var key=getISOWeekKey(new Date());
+    if(cheatToggle.checked){ if(state.cheatWeeks.indexOf(key)===-1) state.cheatWeeks.push(key); }
+    else{ state.cheatWeeks = state.cheatWeeks.filter(function(k){return k!==key;}); }
+    save(); updateCheatChart();
+  });
+  function updateWorkoutChart(){
+    var canvas=document.getElementById("workoutCanvas");
+    if(!canvas) return;
+    var now=new Date(); var vals=[];
+    for(var i=7;i>=0;i--){
+      var d=new Date(now); d.setDate(now.getDate()-i*7);
+      var key=getISOWeekKey(d);
+      var count=Array.from(new Set(state.workouts.filter(function(w){return getISOWeekKey(w.date)===key;}).map(function(w){return w.date;}))).length;
+      vals.push(count);
+    }
+    drawLineCanvas(canvas, vals, {min:0, max:4, color:"#6ea8fe", fill=false});
+  }
+  function updateCheatChart(){
+    var canvas=document.getElementById("cheatCanvas");
+    if(!canvas) return;
+    var now=new Date(); var vals=[];
+    for(var i=5;i>=0;i--){
+      var d=new Date(now); d.setMonth(now.getMonth()-i,1);
+      var y=d.getFullYear(), m=d.getMonth();
+      var count=0;
+      state.cheatWeeks.forEach(function(k){
+        var parts=k.split("-W"); var anyDay=new Date(Number(parts[0]),0,1+(Number(parts[1])-1)*7);
+        if(anyDay.getFullYear()===y && anyDay.getMonth()===m) count++;
+      });
+      vals.push(count);
+    }
+    drawLineCanvas(canvas, vals, {min:0, max:5, color:"#a8f0c9", fill=false});
+  }
+
+  // Water
+  var waterTodayEl=document.getElementById("water-today");
+  var waterBtns=document.querySelectorAll("[data-water]");
+  var waterReset=document.getElementById("water-reset");
+  var waterRange="week";
+  function getWater(date){ var r=state.water.find(function(w){return w.date===date;}); return r? r.liters:0; }
+  function setWater(date, liters){
+    var idx=state.water.findIndex(function(w){return w.date===date;});
+    if(idx>=0) state.water[idx].liters=Math.max(0, +liters.toFixed(2));
+    else state.water.push({date:date, liters: Math.max(0, +liters.toFixed(2))});
+    save(); renderWaterToday(); updateWaterChart();
+  }
+  function renderWaterToday(){ if(waterTodayEl) waterTodayEl.textContent = getWater(todayStr()).toFixed(2); }
+  Array.prototype.forEach.call(waterBtns, function(b){ b.addEventListener("click", function(){ var inc=parseFloat(b.getAttribute("data-water").replace("+","")); setWater(todayStr(), getWater(todayStr()) + inc); }); });
+  if(waterReset) waterReset.addEventListener("click", function(){ setWater(todayStr(), 0); });
+  Array.prototype.forEach.call(document.querySelectorAll(".water-range-btn"), function(b){ b.addEventListener("click", function(){ waterRange=b.getAttribute("data-range"); updateWaterChart(); }); });
+  function aggregateWater(range){
+    if(!range) range="week"; var now=new Date();
+    if(range==="week"||range==="month"){
+      var days=(range==="week"?7:30);
+      return Array.from({length:days}, function(_,i){
+        var d=new Date(now); d.setDate(now.getDate()-(days-1-i)); var ds=d.toISOString().slice(0,10);
+        return getWater(ds);
+      });
+    }
+    var arr=[]; for(var i=11;i>=0;i--){
+      var d2=new Date(); d2.setMonth(d2.getMonth()-i,1);
+      var y=d2.getFullYear(), m=d2.getMonth(), start=new Date(y,m,1), end=new Date(y,m+1,1);
+      var sum=0,count=0;
+      for(var dd=new Date(start); dd<end; dd.setDate(dd.getDate()+1)){ sum+=getWater(dd.toISOString().slice(0,10)); count++; }
+      arr.push(+(sum/(count||1)).toFixed(2));
+    } return arr;
+  }
+  function updateWaterChart(){
+    var vals=aggregateWater(waterRange);
+    drawLineCanvas(document.getElementById("waterCanvas"), vals, {min:0, max:4, color:"#6ea8fe", fill=false});
+  }
+
+  // Meals
+  var mealType=document.getElementById("meal-type");
+  var mealText=document.getElementById("meal-text");
+  var mealAddBtn=document.getElementById("meal-add-btn");
+  var mealsRows=document.getElementById("meals-today-rows");
+  var mealsTodayTotal=document.getElementById("meals-today-total");
+  var mealRange="week";
+
+  function extractKcal(text){ var m=text.match(/(\d{2,4})\s?k?cal/i); return m?parseInt(m[1],10):null; }
+  var kcalDict={"plov":650,"palov":650,"osh":650,"somsa":320,"samsa":320,"lagman":550,"shashlik":400,"kabob":400,"manti":450,"chuchvara":420,"oatmeal":250,"bo'tqa":250,"botqa":250,"salad":220,"salat":220,"tovuq":250,"chicken":250,"sho'rva":180,"shorva":180,"soup":180,"non":250,"qatiq":150,"yogurt":150,"cola":140,"pepsi":150,"pizza":700,"burger":700};
+  function estimateCalories(text){
+    var explicit=extractKcal(text); if(explicit) return explicit;
+    var t=text.toLowerCase(); var guess=0; for(var k in kcalDict){ if(Object.prototype.hasOwnProperty.call(kcalDict,k)){ if(t.indexOf(k)!==-1) guess=Math.max(guess,kcalDict[k]); } }
+    if(guess===0){ if(/\b(2|ikki|double)\b/.test(t)) guess=400; else guess=300; } return guess;
+  }
+  if(mealAddBtn) mealAddBtn.addEventListener("click", function(){
+    var text=mealText.value.trim(); if(!text) return alert("Ta'rif kiriting");
+    var kcal=estimateCalories(text); var now=new Date();
+    state.meals.push({date:todayStr(), time:fmtHM(now), kind:mealType.value, text:text, kcal:kcal});
+    mealText.value=""; save(); renderMealsToday(); updateMealsChart();
+  });
+  function renderMealsToday(){
+    if(!mealsRows) return;
+    var rows=state.meals.filter(function(m){return m.date===todayStr();});
+    mealsRows.innerHTML=rows.map(function(m){ return '<tr><td>'+m.time+'</td><td>'+m.kind+'</td><td>'+m.text+'</td><td>'+(m.kcal||"")+'</td></tr>'; }).join("");
+    var total=rows.reduce(function(a,b){return a+(b.kcal||0);},0); if(mealsTodayTotal) mealsTodayTotal.textContent=total;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".meal-range-btn"), function(b){ b.addEventListener("click", function(){ mealRange=b.getAttribute("data-range"); updateMealsChart(); }); });
+  function aggregateMeals(range){
+    if(!range) range="week"; var now=new Date();
+    if(range==="week"||range==="month"){
+      var days=(range==="week"?7:30);
+      return Array.from({length:days}, function(_,i){
+        var d=new Date(now); d.setDate(now.getDate()-(days-1-i)); var ds=d.toISOString().slice(0,10);
+        return state.meals.filter(function(m){return m.date===ds;}).reduce(function(a,b){return a+(b.kcal||0);},0);
+      });
+    }
+    var arr=[]; for(var i=11;i>=0;i--){
+      var d2=new Date(); d2.setMonth(d2.getMonth()-i,1);
+      var y=d2.getFullYear(), m=d2.getMonth(), start=new Date(y,m,1), end=new Date(y,m+1,1);
+      var kcal=state.meals.filter(function(mm){ var md=new Date(mm.date); return md>=start && md<end; }).reduce(function(a,b){return a+(b.kcal||0);},0);
+      arr.push(kcal);
+    } return arr;
+  }
+  function updateMealsChart(){
+    var vals=aggregateMeals(mealRange);
+    drawLineCanvas(document.getElementById("mealsCanvas"), vals, {min:0, max:null, color:"#ffd27a", fill=false});
+  }
+
+  // GAS
+  var gasInput=document.getElementById("gas-url");
+  var gasSave=document.getElementById("save-gas");
+  var gasSend=document.getElementById("send-now");
+  var DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbxLWoNkbCKREX9gIh74YYpt3WtCZBR23vcGCOFFqhExKUuEnq_8-mynl0OmUqo7P0tF/exec";
+  if(!state.settings.gasUrl){ state.settings.gasUrl = DEFAULT_GAS_URL; }
+  if(gasInput) gasInput.value = state.settings.gasUrl || "";
+  if(gasSave) gasSave.addEventListener("click", function(){ state.settings.gasUrl = (gasInput.value||'').trim() || null; save(); alert("Saqlandi"); });
+  if(gasSend) gasSend.addEventListener("click", function(){ sendToGAS(true); });
+
+  var sendTimer=null;
+  function maybeAutoSend(){
+    if(!state.settings.gasUrl) return;
+    clearTimeout(sendTimer);
+    sendTimer = setTimeout(function(){ sendToGAS(false); }, 2000);
+  }
+  function sendToGAS(showAlert){
+    try{
+      var payload = { ts: new Date().toISOString(), data: state };
+      fetch(state.settings.gasUrl, { method:"POST", body: JSON.stringify(payload) })
+        .then(function(res){ return res.text().then(function(txt){ return {ok:res.ok, status:res.status, txt:txt}; }); })
+        .then(function(r){
+          if(!r.ok) throw new Error("HTTP "+r.status+" "+r.txt);
+          if(showAlert) alert("Yuborildi: OK");
+          setStatus("✅ Online — yuborildi");
+        })
+        .catch(function(e){ if(showAlert) alert("Xato: "+e.message); setStatus("⚠️ Yuborilmadi: "+e.message.slice(0,60)); });
+    }catch(e){ if(showAlert) alert("Xato: "+e.message); setStatus("⚠️ Yuborilmadi: "+e.message.slice(0,60)); }
+  }
+
+  function renderAllCharts(){ updateSleepChart(); updateWorkoutChart(); updateCheatChart(); updateWaterChart(); updateMealsChart(); buildWeekStrip(); renderWorkoutProgress(); renderMealsToday(); renderWaterToday(); }
+  renderAllCharts(); resizeAll();
+
+  window.addEventListener('online', function(){ setStatus("✅ Online"); });
+  window.addEventListener('offline', function(){ setStatus("⏳ Offline"); });
+  if(navigator.onLine) setStatus("✅ Online");
+  </script>
+</body>
+</html>
