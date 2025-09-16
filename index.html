@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hayot Kundaligi — v2</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="container">
+    <h1>Hayot Kundaligi</h1>
+    <p class="subtitle">Uyqu • Zal • Ovqat • Suv • Fokus</p>
+  </header>
+
+  <main class="container">
+    <!-- SLEEP TRACKER -->
+    <section class="card" id="sleep-section">
+      <div class="card-head">
+        <h2>Uyqu</h2>
+        <div class="range-switch">
+          <button class="range-btn" data-range="week">Hafta</button>
+          <button class="range-btn" data-range="month">Oy</button>
+          <button class="range-btn" data-range="year">Yil</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="btn-row">
+            <button id="sleep-start-btn" class="btn primary">Uyquga yotdim</button>
+            <button id="sleep-end-btn" class="btn success">Uyg'ondim</button>
+          </div>
+          <details class="inline-details">
+            <summary>Vaqtni qo'lda kiritish</summary>
+            <div class="inline">
+              <label>Start:
+                <input type="datetime-local" id="sleep-start-manual">
+              </label>
+              <label>End:
+                <input type="datetime-local" id="sleep-end-manual">
+              </label>
+              <button id="sleep-save-manual" class="btn ghost">Saqlash</button>
+            </div>
+          </details>
+
+          <h3>Oxirgi yozuvlar</h3>
+          <table class="mini">
+            <thead><tr><th>Sana</th><th>Boshlanish</th><th>Tugash</th><th>Soat</th></tr></thead>
+            <tbody id="sleep-last-rows"></tbody>
+          </table>
+        </div>
+
+        <div>
+          <canvas id="sleepChart" height="220"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORKOUT TRACKER -->
+    <section class="card" id="workout-section">
+      <div class="card-head">
+        <h2>Zal (3×/hafta)</h2>
+        <div class="week-strip" id="week-strip"></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="btn-row">
+            <select id="workout-type" class="select">
+              <option value="gym">Gym</option>
+              <option value="cardio">Cardio</option>
+              <option value="home">Home</option>
+              <option value="sport">Sport</option>
+            </select>
+            <button id="workout-done-btn" class="btn primary">Bugun zalga bordim</button>
+          </div>
+          <details class="inline-details">
+            <summary>Qo'lda vaqt</summary>
+            <div class="inline">
+              <label>Boshlanish:
+                <input type="time" id="wo-start">
+              </label>
+              <label>Tugash:
+                <input type="time" id="wo-end">
+              </label>
+              <button id="wo-save-manual" class="btn ghost">Saqlash</button>
+            </div>
+          </details>
+
+          <div class="progress-wrap">
+            <div class="progress" id="wo-progress"><span id="wo-progress-label">0/3</span></div>
+          </div>
+
+          <div class="cheat-wrap">
+            <label class="switch">
+              <input type="checkbox" id="cheat-toggle">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">Haftalik cheat day</span>
+          </div>
+        </div>
+        <div>
+          <canvas id="workoutChart" height="220"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <h3>Cheat day statistikasi (oxirgi 6 oy)</h3>
+          <canvas id="cheatChart" height="200"></canvas>
+        </div>
+        <div></div>
+      </div>
+    </section>
+
+    <!-- WATER TRACKER -->
+    <section class="card" id="water-section">
+      <div class="card-head">
+        <h2>Suv</h2>
+        <div class="range-switch">
+          <button class="water-range-btn" data-range="week">Hafta</button>
+          <button class="water-range-btn" data-range="month">Oy</button>
+          <button class="water-range-btn" data-range="year">Yil</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="btn-row">
+            <button class="btn primary" data-water="+0.25">+0.25L</button>
+            <button class="btn primary" data-water="+0.5">+0.5L</button>
+            <button class="btn primary" data-water="+1">+1L</button>
+            <button class="btn ghost" id="water-reset">Bugun 0</button>
+          </div>
+          <h3>Bugun: <span id="water-today">0</span> L</h3>
+          <p class="muted">Maqsad: 2.0–3.0 L (faol kunda 3.5 L)</p>
+        </div>
+        <div>
+          <canvas id="waterChart" height="220"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEAL TRACKER -->
+    <section class="card" id="meals-section">
+      <div class="card-head">
+        <h2>Ovqat</h2>
+        <div class="range-switch">
+          <button class="meal-range-btn" data-range="week">Hafta</button>
+          <button class="meal-range-btn" data-range="month">Oy</button>
+          <button class="meal-range-btn" data-range="year">Yil</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="inline">
+            <select id="meal-type" class="select">
+              <option value="nonushta">Nonushta</option>
+              <option value="tushlik">Tushlik</option>
+              <option value="kechki">Kechki</option>
+              <option value="snack">Snack</option>
+            </select>
+            <input id="meal-text" placeholder="Masalan: plov 650kcal yoki '2 somsa'">
+            <button id="meal-add-btn" class="btn primary">Qo'shish</button>
+          </div>
+          <p class="muted">Kkal yozmasang ham bo‘ladi — taxmin algoritm bor.</p>
+
+          <h3>Bugungi ovqatlar</h3>
+          <table class="mini">
+            <thead><tr><th>Vaqt</th><th>Turi</th><th>Ta'rif</th><th>kcal</th></tr></thead>
+            <tbody id="meals-today-rows"></tbody>
+            <tfoot><tr><td colspan="3">Jami</td><td id="meals-today-total">0</td></tr></tfoot>
+          </table>
+        </div>
+
+        <div>
+          <canvas id="mealsChart" height="220"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOCUS TRACKER -->
+    <section class="card" id="focus-section">
+      <div class="card-head">
+        <h2>Fokus vaqti</h2>
+        <div class="range-switch">
+          <button class="focus-range-btn" data-range="week">Hafta</button>
+          <button class="focus-range-btn" data-range="month">Oy</button>
+          <button class="focus-range-btn" data-range="year">Yil</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="btn-row">
+            <button id="focus-start" class="btn primary">Fokusni boshlash</button>
+            <button id="focus-stop" class="btn success">To'xtatish</button>
+            <input type="number" min="1" id="focus-mins" placeholder="qo'lda (min)" class="input">
+            <button id="focus-add" class="btn ghost">Qo'shish</button>
+          </div>
+          <h3>Bugun: <span id="focus-today">0</span> daqiqa</h3>
+          <p class="muted">Maslahat: Pomodoro 50/10 yoki 25/5 — o‘zingga mosini tanla.</p>
+        </div>
+        <div>
+          <canvas id="focusChart" height="220"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPORT/IMPORT -->
+    <section class="card">
+      <h2>Ma'lumotlar</h2>
+      <div class="btn-row">
+        <button id="export-json" class="btn ghost">JSON Export</button>
+        <button id="export-csv" class="btn ghost">CSV Export</button>
+        <label class="file">
+          Import JSON <input type="file" id="import-json" accept="application/json">
+        </label>
+        <button id="clear-all" class="btn danger">Hammasini tozalash</button>
+      </div>
+      <details>
+        <summary>Google Drive integratsiyasi (ixtiyoriy)</summary>
+        <p class="muted">Apps Script web‑app URL kiritsang, sayt avtomatik JSON yuboradi (o‘zgarsa):</p>
+        <div class="inline">
+          <input id="gas-url" placeholder="https://script.google.com/macros/s/...../exec" class="input wide">
+          <button id="save-gas" class="btn primary">Saqlash</button>
+          <button id="send-now" class="btn ghost">Hozir yuborish</button>
+        </div>
+        <p class="muted small">Pastda Apps Script kodini beraman.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="container">
+    <p>© 2025 Hayot Kundaligi — v2 (PWA, offline)</p>
+  </footer>
+</body>
+</html>
