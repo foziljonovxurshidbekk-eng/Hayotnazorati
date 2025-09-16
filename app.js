@@ -1,4 +1,8 @@
-
+// Kill old PWA service worker + caches (bir marta)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+  if (window.caches) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
+}
 // ===== Storage & State =====
 const KEY = "lifestats_v2";
 const state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify({
