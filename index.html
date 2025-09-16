@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hayot Kundaligi — v3 (online)</title>
+  <title>Hayot Kundaligi — v3.1 (online)</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="app.js"></script>
 </head>
@@ -15,7 +15,6 @@
   </header>
 
   <main class="container">
-    <!-- SLEEP -->
     <section class="card">
       <div class="card-head">
         <h2>Uyqu</h2>
@@ -46,12 +45,11 @@
           </table>
         </div>
         <div>
-          <canvas id="sleepCanvas" width="600" height="220" class="spark"></canvas>
+          <canvas id="sleepCanvas" class="spark"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- WORKOUT + CHEAT -->
     <section class="card">
       <div class="card-head">
         <h2>Zal (3×/hafta)</h2>
@@ -80,18 +78,17 @@
           </div>
         </div>
         <div>
-          <canvas id="workoutCanvas" width="600" height="220" class="spark"></canvas>
+          <canvas id="workoutCanvas" class="spark"></canvas>
         </div>
       </div>
       <div class="grid-2">
         <div>
           <h3>Cheat day statistikasi (6 oy)</h3>
-          <canvas id="cheatCanvas" width="600" height="200" class="spark"></canvas>
+          <canvas id="cheatCanvas" class="spark slim"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- WATER -->
     <section class="card">
       <div class="card-head">
         <h2>Suv</h2>
@@ -112,12 +109,11 @@
           <h3>Bugun: <span id="water-today">0</span> L</h3>
         </div>
         <div>
-          <canvas id="waterCanvas" width="600" height="220" class="spark"></canvas>
+          <canvas id="waterCanvas" class="spark"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- MEALS -->
     <section class="card">
       <div class="card-head">
         <h2>Ovqat</h2>
@@ -147,24 +143,22 @@
           </table>
         </div>
         <div>
-          <canvas id="mealsCanvas" width="600" height="220" class="spark"></canvas>
+          <canvas id="mealsCanvas" class="spark"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- INTEGRATION -->
     <section class="card">
       <h2>Google Drive integratsiyasi</h2>
-      <p class="muted">Web-app URL bir marta saqlansa, har bir o‘zgarish avtomatik yuboriladi. Qo‘lda test uchun “Hozir yuborish”.</p>
+      <p class="muted">URL saqlansa, har bir o‘zgarish avtomatik yuboriladi. Test uchun “Hozir yuborish”.</p>
       <div class="inline">
         <input id="gas-url" placeholder="https://script.google.com/macros/s/...../exec" class="input wide">
         <button id="save-gas" class="btn primary">Saqlash</button>
         <button id="send-now" class="btn ghost">Hozir yuborish</button>
       </div>
     </section>
-
   </main>
 
-  <footer class="container"><p>© 2025 Hayot Kundaligi — v3 (online)</p></footer>
+  <footer class="container"><p>© 2025 Hayot Kundaligi — v3.1 (online)</p></footer>
 </body>
 </html>

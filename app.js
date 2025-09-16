@@ -1,12 +1,11 @@
+
 // Kill old PWA service worker + caches (one-time cleanup)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
   if (window.caches) { caches.keys().then(keys => keys.forEach(k => caches.delete(k))); }
 }
 
-// ===== Minimal online app (no service worker, no CDN). =====
-
-// ----- State -----
+// ===== Storage & State =====
 const KEY = "lifestats_v3";
 const state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify({
   sleeps: [], workouts: [], cheatWeeks: [], meals: [], water: [], focus: [],
@@ -32,33 +31,76 @@ function getISOWeekKey(d){ const w=getISOWeek(new Date(d)); return `${w.year}-W$
 const statusEl = document.getElementById("status");
 function setStatus(txt){ if(statusEl) statusEl.textContent = txt; }
 
+// ===== Responsive canvas helpers =====
+function setupCanvas(id, baseH=220){
+  const canvas = document.getElementById(id);
+  if(!canvas) return null;
+  function resize(){
+    const ratio = window.devicePixelRatio || 1;
+    const cssW = Math.max(280, Math.floor(canvas.getBoundingClientRect().width));
+    const cssH = baseH;
+    const w = Math.floor(cssW * ratio);
+    const h = Math.floor(cssH * ratio);
+    if(canvas.width!==w || canvas.height!==h){
+      canvas.width=w; canvas.height=h;
+    }
+  }
+  resize();
+  return {canvas, resize};
+}
+const canvases = [
+  setupCanvas("sleepCanvas",220),
+  setupCanvas("workoutCanvas",220),
+  setupCanvas("cheatCanvas",200),
+  setupCanvas("waterCanvas",220),
+  setupCanvas("mealsCanvas",220),
+].filter(Boolean);
+function resizeAll(){ canvases.forEach(c=>c.resize()); renderAllCharts(); }
+window.addEventListener("resize", resizeAll);
+
 // ====== Canvas chart (tiny) ======
 function drawLineCanvas(canvas, values, {min=0, max=null, color="#8bd1ff", fill=false}={}){
   if(!canvas) return;
   const ctx = canvas.getContext("2d");
   const w = canvas.width, h = canvas.height;
   ctx.clearRect(0,0,w,h);
-  if(values.length===0){ return; }
-  if(max==null){ max = Math.max(min+1, Math.max(...values)); }
-  // axes (subtle)
+
+  // axes (subtle baseline)
   ctx.strokeStyle = "#223149"; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(32,h-24); ctx.lineTo(w-8,h-24); ctx.stroke();
-  // line
+
+  if(values.length===0){
+    // Empty-state label
+    ctx.fillStyle = "#9fb1c6"; ctx.font = "14px system-ui, -apple-system";
+    ctx.fillText("Hali ma'lumot yo'q", 40, h/2);
+    return;
+  }
+  const allZero = values.every(v => !v || Number(v)===0);
+  if(max==null){ max = Math.max(min+1, Math.max(...values)); }
+
   const padL=32, padR=8, padT=8, padB=24;
   const innerW=w-padL-padR, innerH=h-padT-padB;
   ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin="round"; ctx.lineCap="round";
   ctx.beginPath();
   values.forEach((v,i)=>{
-    const x = padL + (i/(values.length-1))*innerW;
-    const y = padT + (1- ( (v-min)/(max-min||1) ))*innerH;
+    const x = padL + (i/(values.length-1||1))*innerW;
+    const norm = (v-min)/(max-min||1);
+    const y = padT + (1- norm)*innerH;
     if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   });
-  ctx.stroke();
-  if(fill){
-    ctx.lineTo(padL+innerW, h-padB);
-    ctx.lineTo(padL, h-padB);
-    ctx.closePath();
-    ctx.globalAlpha=0.15; ctx.fillStyle=color; ctx.fill(); ctx.globalAlpha=1.0;
+  if(allZero){
+    ctx.setLineDash([6,6]);
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#9fb1c6"; ctx.font = "13px system-ui,-apple-system";
+    ctx.fillText("Ma'lumot kiritilsa graf tiklanadi", 40, h/2);
+  } else {
+    ctx.stroke();
+    if(fill){
+      ctx.lineTo(padL+innerW, h-padB);
+      ctx.lineTo(padL, h-padB);
+      ctx.closePath();
+      ctx.globalAlpha=0.15; ctx.fillStyle=color; ctx.fill(); ctx.globalAlpha=1.0;
+    }
   }
 }
 
@@ -113,7 +155,6 @@ function aggregateSleep(range="week"){
       return +(mins/60).toFixed(2);
     });
   }
-  // year monthly average
   const arr=[];
   for(let i=11;i>=0;i--){
     const d=new Date(); d.setMonth(d.getMonth()-i,1);
@@ -168,7 +209,7 @@ function renderWorkoutProgress(){
   const count=new Set(workoutsThisWeek().map(w=>w.date)).size;
   const pct=clamp((count/3)*100,0,100);
   if(woProgressLabel) woProgressLabel.textContent=`${count}/3`;
-  woProgress.style.background = `linear-gradient(90deg, #1f3b64 0%, #0e2a47 ${pct}%, #0d131d ${pct}%)`;
+  woProgress.style.background = `linear-gradient(90deg, var(--blue) 0%, var(--blue-deep) ${pct}%, #0d131d ${pct}%)`;
 }
 cheatToggle?.addEventListener("change", ()=>{
   const key=getISOWeekKey(new Date());
@@ -186,7 +227,7 @@ function updateWorkoutChart(){
     const count=new Set(state.workouts.filter(w=>getISOWeekKey(w.date)===key).map(w=>w.date)).size;
     vals.push(count);
   }
-  drawLineCanvas(canvas, vals, {min:0, max:4, color:"#6ea8fe", fill:false});
+  drawLineCanvas(canvas, vals, {min:0, max:4, color:"#6ea8fe", fill=false});
 }
 function updateCheatChart(){
   const canvas=document.getElementById("cheatCanvas");
@@ -202,9 +243,8 @@ function updateCheatChart(){
     });
     vals.push(count);
   }
-  drawLineCanvas(canvas, vals, {min:0, max:5, color:"#a8f0c9", fill:false});
+  drawLineCanvas(canvas, vals, {min:0, max:5, color:"#a8f0c9", fill=false});
 }
-buildWeekStrip(); renderWorkoutProgress(); updateWorkoutChart(); updateCheatChart();
 
 // ===== Water =====
 const waterTodayEl=document.getElementById("water-today");
@@ -244,9 +284,8 @@ function aggregateWater(range="week"){
 }
 function updateWaterChart(){
   const vals=aggregateWater(waterRange);
-  drawLineCanvas(document.getElementById("waterCanvas"), vals, {min:0, max:4, color:"#6ea8fe", fill:false});
+  drawLineCanvas(document.getElementById("waterCanvas"), vals, {min:0, max:4, color:"#6ea8fe", fill=false});
 }
-renderWaterToday(); updateWaterChart();
 
 // ===== Meals =====
 const mealType=document.getElementById("meal-type");
@@ -292,11 +331,7 @@ function aggregateMeals(range="week"){
     arr.push(kcal);
   } return arr;
 }
-function updateMealsChart(){
-  const vals=aggregateMeals(mealRange);
-  drawLineCanvas(document.getElementById("mealsCanvas"), vals, {min:0, max:null, color:"#ffd27a", fill:false});
-}
-renderMealsToday(); updateMealsChart();
+function updateMealsChart(){ const vals=aggregateMeals(mealRange); drawLineCanvas(document.getElementById("mealsCanvas"), vals, {min:0, max:null, color:"#ffd27a", fill:false}); }
 
 // ===== GAS integration =====
 const gasInput=document.getElementById("gas-url");
@@ -327,6 +362,10 @@ async function sendToGAS(showAlert){
     setStatus("⚠️ Yuborilmadi: "+e.message.slice(0,60));
   }
 }
+
+// Initial render
+function renderAllCharts(){ updateSleepChart(); updateWorkoutChart(); updateCheatChart(); updateWaterChart(); updateMealsChart(); }
+renderSleepRows(); resizeAll(); renderAllCharts();
 
 // Network status
 window.addEventListener('online', ()=> setStatus("✅ Online"));
